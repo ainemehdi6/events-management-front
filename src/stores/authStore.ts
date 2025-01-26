@@ -9,6 +9,7 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   setTokens: (token: string, refreshToken: string, tokenExpiration: number, user: User) => void;
+  setUser: (user: User) => void;
   logout: () => void;
   checkAuth: () => boolean;
 }
@@ -23,8 +24,8 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       setTokens: (token, refreshToken, tokenExpiration, user) =>
         set({ token, refreshToken, tokenExpiration, user, isAuthenticated: true }),
+      setUser: (user) => set({ user }),
       logout: () => {
-        // Clear all auth-related state
         set({
           token: null,
           refreshToken: null,
@@ -32,23 +33,19 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           isAuthenticated: false,
         });
-        // Clear persisted data
         localStorage.removeItem('auth-storage');
-        // Clear any cached API responses
         localStorage.removeItem('api-cache');
-        // Optionally clear session storage as well
         sessionStorage.clear();
       },
       checkAuth: () => {
         const state = get();
         if (!state.token || !state.tokenExpiration) {
-          state.logout(); // Clear all auth data if token is missing
+          state.logout();
           return false;
         }
-        // Check if token is expired (with 1 minute buffer)
         const isExpired = Date.now() >= (state.tokenExpiration * 1000) - 60000;
         if (isExpired) {
-          state.logout(); // Clear all auth data if token is expired
+          state.logout();
           return false;
         }
         return true;
@@ -56,7 +53,6 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      // Only persist necessary fields
       partialize: (state) => ({
         token: state.token,
         refreshToken: state.refreshToken,

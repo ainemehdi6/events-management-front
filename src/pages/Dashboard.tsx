@@ -11,27 +11,55 @@ import { EventCard } from '../components/EventCard';
 import { eventService } from '../services/eventService';
 import type { Event } from '../types/event';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 export const Dashboard: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadEvents = async () => {
-      try {
-        const data = await eventService.getEvents();
-        setEvents(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Failed to load events:', error);
-        toast.error('Failed to load events');
-        setEvents([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadEvents = async () => {
+    try {
+      const data = await eventService.getEvents();
+      setEvents(Array.isArray(data) ? data : []);
+    } catch (error) {
+      toast.error('Failed to load events');
+      setEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadEvents();
   }, []);
+
+  const handleRegister = async (eventId: string) => {
+    try {
+      await eventService.registerForEvent(eventId);
+      toast.success('Successfully registered for the event!');
+      await loadEvents();
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 400) {
+        toast.error('Already registered for this event');
+      } else {
+        if (axios.isAxiosError(error) && error.response?.status === 400) {
+          toast.error('Already registered for this event');
+        } else {
+          toast.error('Failed to register for the event. Please try again.');
+        }
+      }
+    }
+  };
+
+  const handleCancelRegistration = async (eventId: string) => {
+    try {
+      await eventService.cancelRegistration(eventId);
+      toast.success('Successfully cancelled registration');
+      await loadEvents();
+    } catch (error) {
+      toast.error('Failed to cancel registration. Please try again.');
+    }
+  };
 
   if (loading) {
     return (
@@ -41,7 +69,6 @@ export const Dashboard: React.FC = () => {
     );
   }
 
-  // Calculate stats after loading is complete and events are available
   const totalRegistrations = events.reduce((acc, event) => acc + event.registeredCount, 0);
   const upcomingEventsCount = events.filter(event => new Date(event.date) > new Date()).length;
 
@@ -108,7 +135,12 @@ export const Dashboard: React.FC = () => {
         {upcomingEvents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {upcomingEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <EventCard
+                key={event.id}
+                event={event}
+                onRegister={() => handleRegister(event.id)}
+                onCancelRegistration={() => handleCancelRegistration(event.id)}
+              />
             ))}
           </div>
         ) : (

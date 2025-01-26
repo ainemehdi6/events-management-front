@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 import { eventService } from '../services/eventService';
 import { useAuthStore } from '../stores/authStore';
 import type { Event, EventRegistration } from '../types/event';
+import axios from 'axios';
 
 export const EventDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -47,11 +48,18 @@ export const EventDetails: React.FC = () => {
     try {
       await eventService.registerForEvent(event.id);
       toast.success('Successfully registered for the event!');
-      // Refresh event details
       const updatedEvent = await eventService.getEvent(event.id);
       setEvent(updatedEvent);
     } catch (error) {
-      toast.error('Failed to register for the event. Please try again.');
+      if (axios.isAxiosError(error) && error.response?.status === 400) {
+        toast.error('Already registered for this event');
+      } else {
+        if (axios.isAxiosError(error) && error.response?.status === 400) {
+          toast.error('Already registered for this event');
+        } else {
+          toast.error('Failed to register for the event. Please try again.');
+        }
+      }
     }
   };
 

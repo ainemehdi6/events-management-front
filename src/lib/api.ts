@@ -8,14 +8,12 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth headers
 api.interceptors.request.use(
   (config) => {
     const authEndpoints = ['/login-check', '/api/register', '/token/refresh'];
     if (authEndpoints.some(endpoint => config.url?.includes(endpoint))) {
       config.headers['X-API-TOKEN'] = import.meta.env.VITE_API_KEY;
     } else {
-      // Add Bearer token for all other endpoints
       const token = useAuthStore.getState().token;
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -28,20 +26,17 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle token refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // If error is 401 and we haven't tried refreshing yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       const state = useAuthStore.getState();
       const refreshToken = state.refreshToken;
 
-      // If no refresh token, logout and redirect
       if (!refreshToken) {
         state.logout();
         window.location.href = '/login?session=expired';

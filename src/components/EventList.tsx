@@ -6,12 +6,14 @@ import type { Event } from '../types/event';
 interface EventListProps {
   events: Event[];
   onRegister: (eventId: string) => void;
+  onCancelRegistration: (eventId: string) => void;
   loading?: boolean;
 }
 
 export const EventList: React.FC<EventListProps> = ({
   events = [],
   onRegister,
+  onCancelRegistration,
   loading = false
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -76,6 +78,7 @@ export const EventList: React.FC<EventListProps> = ({
               key={event.id}
               event={event}
               onRegister={() => onRegister(event.id)}
+              onCancelRegistration={() => onCancelRegistration(event.id)}
             />
           ))}
         </div>

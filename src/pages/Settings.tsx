@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Mail, Shield, Key } from 'lucide-react';
+import { Bell, Shield, Key } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const Settings: React.FC = () => {
@@ -53,7 +53,6 @@ export const Settings: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      // Replace with actual API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
       toast.success('Settings saved successfully!');
     } catch (error) {

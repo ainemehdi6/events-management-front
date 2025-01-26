@@ -44,7 +44,7 @@ export interface Event {
     email: string;
   };
   features: string[];
-  registrations?: EventRegistration[];
+  isRegistered?: boolean;
   createdAt: string;
   updatedAt: string;
 }

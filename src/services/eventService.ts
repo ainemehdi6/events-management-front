@@ -50,4 +50,8 @@ export const eventService = {
     });
     return response.data;
   },
+  
+  async cancelRegistration(eventId: string): Promise<void> {
+    await api.delete(`/events/${eventId}/register`);
+  },
 };

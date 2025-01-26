@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { eventService } from '../services/eventService';
 import { useAuthStore } from '../stores/authStore';
 import type { Event } from '../types/event';
+import axios from 'axios';
 
 export const Events: React.FC = () => {
   const navigate = useNavigate();
@@ -13,20 +14,19 @@ export const Events: React.FC = () => {
   const { user } = useAuthStore();
   const isAdmin = user?.roles.includes('ROLE_ADMIN');
 
-  useEffect(() => {
-    const loadEvents = async () => {
-      try {
-        const data = await eventService.getEvents();
-        setEvents(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Failed to load events:', error);
-        toast.error('Failed to load events');
-        setEvents([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadEvents = async () => {
+    try {
+      const data = await eventService.getEvents();
+      setEvents(Array.isArray(data) ? data : []);
+    } catch (error) {
+      toast.error('Failed to load events');
+      setEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadEvents();
   }, []);
 
@@ -34,11 +34,23 @@ export const Events: React.FC = () => {
     try {
       await eventService.registerForEvent(eventId);
       toast.success('Successfully registered for the event!');
-      // Refresh events list
-      const updatedEvents = await eventService.getEvents();
-      setEvents(Array.isArray(updatedEvents) ? updatedEvents : []);
+      await loadEvents();
     } catch (error) {
-      toast.error('Failed to register for the event. Please try again.');
+      if (axios.isAxiosError(error) && error.response?.status === 400) {
+        toast.error('Already registered for this event');
+      } else {
+        toast.error('Failed to register for the event. Please try again.');
+      }
+    }
+  };
+
+  const handleCancelRegistration = async (eventId: string) => {
+    try {
+      await eventService.cancelRegistration(eventId);
+      toast.success('Successfully cancelled registration');
+      await loadEvents();
+    } catch (error) {
+      toast.error('Failed to cancel registration. Please try again.');
     }
   };
 
@@ -58,6 +70,7 @@ export const Events: React.FC = () => {
       <EventList
         events={events}
         onRegister={handleRegister}
+        onCancelRegistration={handleCancelRegistration}
         loading={loading}
       />
     </div>

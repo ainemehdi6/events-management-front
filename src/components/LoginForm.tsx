@@ -25,7 +25,6 @@ export const LoginForm: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Check if we were redirected due to session expiration
     const params = new URLSearchParams(location.search);
     if (params.get('session') === 'expired') {
       toast.error('Your session has expired. Please log in again.');
@@ -41,7 +40,6 @@ export const LoginForm: React.FC = () => {
       const validatedData = loginSchema.parse(formData);
       const { token, refresh_token, token_expiration, user, user_roles } = await authService.login(validatedData);
 
-      // Update user with roles from response
       const userWithRoles = {
         ...user,
         roles: user_roles,
@@ -50,7 +48,6 @@ export const LoginForm: React.FC = () => {
       setTokens(token, refresh_token, token_expiration, userWithRoles);
       toast.success('Successfully logged in!');
 
-      // Redirect to the intended destination or dashboard
       const params = new URLSearchParams(location.search);
       const redirect = params.get('redirect') || '/dashboard';
       navigate(redirect);

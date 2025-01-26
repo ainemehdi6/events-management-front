@@ -1,29 +1,27 @@
 import React from 'react';
-import { Calendar, MapPin, Users, Check, Clock } from 'lucide-react';
+import { Calendar, MapPin, Users, Check, Clock, X } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { Link } from 'react-router-dom';
-import type { Event, EventRegistration } from '../types/event';
+import type { Event } from '../types/event';
 
 interface EventCardProps {
   event: Event;
   onRegister?: () => void;
+  onCancelRegistration?: () => void;
   showRegisterButton?: boolean;
 }
 
 export const EventCard: React.FC<EventCardProps> = ({
   event,
   onRegister,
+  onCancelRegistration,
   showRegisterButton = true,
 }) => {
   const { user } = useAuthStore();
   const isAdmin = user?.roles.includes('ROLE_ADMIN');
   const isFullyBooked = event.registeredCount >= event.capacity;
   const availableSpots = event.capacity - event.registeredCount;
-
-  // Check if current user is registered
-  const isRegistered = event.registrations?.some(
-    (reg: EventRegistration) => reg.user.id === user?.id && reg.status !== 'cancelled'
-  );
+  const isRegistered = event.isRegistered;
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -91,23 +89,34 @@ export const EventCard: React.FC<EventCardProps> = ({
               View Registrations
             </Link>
           ) : (
-            showRegisterButton && !isRegistered && (
-              <button
-                onClick={onRegister}
-                disabled={isFullyBooked}
-                className={`w-full px-4 py-2 rounded-md text-sm font-medium ${isFullyBooked
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  }`}
-              >
-                {isFullyBooked ? 'Fully Booked' : 'Register Now'}
-              </button>
-            )
-          )}
-          {isRegistered && (
-            <div className="text-center text-sm text-gray-500">
-              You're registered for this event
-            </div>
+            <>
+              {showRegisterButton && !isRegistered && (
+                <button
+                  onClick={onRegister}
+                  disabled={isFullyBooked}
+                  className={`w-full px-4 py-2 rounded-md text-sm font-medium ${isFullyBooked
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                    }`}
+                >
+                  {isFullyBooked ? 'Fully Booked' : 'Register Now'}
+                </button>
+              )}
+              {isRegistered && (
+                <div className="space-y-2">
+                  <div className="text-center text-sm text-gray-500">
+                    You're registered for this event
+                  </div>
+                  <button
+                    onClick={onCancelRegistration}
+                    className="w-full px-4 py-2 rounded-md text-sm font-medium border border-red-600 text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <X className="w-4 h-4 inline-block mr-1" />
+                    Cancel Registration
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
